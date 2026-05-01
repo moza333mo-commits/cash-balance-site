@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رصيد الصندوق</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        .balance-container {
+            margin: 30px 0;
+        }
+        #balance {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #ff8c00; /* لون برتقالي */
+            direction: ltr;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+        #status {
+            color: #6c757d;
+            font-size: 1.1rem;
+            min-height: 25px;
+            font-weight: bold;
+        }
+        .error-text {
+            color: #dc3545 !important;
+            font-size: 1.5rem !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>رصيد الصندوق</h1>
+        <div class="balance-container">
+            <div id="balance">---</div>
+        </div>
+        <div id="status">جاري التحميل...</div>
+    </div>
+
+    <script>
+        const balanceElement = document.getElementById('balance');
+        const statusElement = document.getElementById('status');
+
+        async function fetchBalance() {
+            statusElement.textContent = "جاري التحديث...";
+            try {
+                // إضافة متغير وقت لمنع الكاش (Cache Busting)
+                const response = await fetch('/data?_t=' + new Date().getTime());
+                const data = await response.json();
+
+                if (data.error) {
+                    balanceElement.textContent = "خطأ";
+                    balanceElement.classList.add('error-text');
+                    statusElement.textContent = data.error;
+                } else {
+                    balanceElement.classList.remove('error-text');
+                    // تنسيق الرقم بفاصلات الآلاف
+                    balanceElement.textContent = Number(data.value).toLocaleString('en-US');
+                    statusElement.textContent = "مُحدث";
+                    
+                    // إخفاء كلمة محدث بعد ثانية ليكون التصميم أنظف
+                    setTimeout(() => {
+                        if(statusElement.textContent === "مُحدث") statusElement.textContent = "";
+                    }, 1000);
+                }
+            } catch (error) {
+                balanceElement.textContent = "---";
+                balanceElement.classList.add('error-text');
+                statusElement.textContent = "فشل الاتصال بالخادم";
+            }
+        }
+
+        // جلب البيانات فور فتح الصفحة
+        fetchBalance();
+        
+        // تحديث البيانات كل 3 ثواني بدون عمل Refresh
+        setInterval(fetchBalance, 3000);
+    </script>
+</body>
+</html>
